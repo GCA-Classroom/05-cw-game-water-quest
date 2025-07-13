@@ -1,23 +1,1215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>Water Quest</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Charity Splash!</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #a8dadc;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    header {
+      background: #ffd700;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 18px;
+      display: none;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+      background: none;
+      display: none;
+      z-index: 0;
+    }
+    #mountainBg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #ground {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 80px;
+      background: #228B22;
+      z-index: 1;
+      transition: background 0.5s;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .drop {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: white;
+      z-index: 2; /* Ensure drops are above ground and mountains */
+    }
+
+    .clean {
+      background: #1ca9c9;
+    }
+
+    .polluted {
+      background: #333;
+    }
+
+    .tree, .tree2, .tree3, .tree4, .tree5 {
+      position: absolute;
+      bottom: 80px;
+      background: #8B4513;
+      transition: filter 0.3s;
+      z-index: 2; /* Ensure trees are above ground and mountains */
+    }
+    .tree {
+      width: 20px;
+      height: 60px;
+      /* Oak */
+    }
+    .tree2 {
+      width: 18px;
+      height: 48px;
+      background: #5c4033;
+      /* Pine */
+    }
+    .tree3 {
+      width: 16px;
+      height: 38px;
+      background: #a0522d;
+      /* Birch */
+    }
+    .tree4 {
+      width: 22px;
+      height: 54px;
+      background: #4e342e;
+      /* Maple */
+    }
+    .tree5 {
+      width: 14px;
+      height: 44px;
+      background: #7b5e57;
+      /* Willow */
+    }
+    .tree::after, .tree2::after, .tree3::after, .tree4::after, .tree5::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+    }
+    .tree::after {
+      top: -40px;
+      left: -15px;
+      width: 50px;
+      height: 50px;
+      background: #006400;
+    }
+    .tree2::after {
+      top: -38px;
+      left: -10px;
+      width: 38px;
+      height: 54px;
+      background: #228B22;
+    }
+    .tree3::after {
+      top: -30px;
+      left: -8px;
+      width: 32px;
+      height: 36px;
+      background: #b7e091;
+    }
+    .tree4::after {
+      top: -36px;
+      left: -12px;
+      width: 44px;
+      height: 44px;
+      background: #e17055;
+    }
+    .tree5::after {
+      top: -32px;
+      left: -10px;
+      width: 38px;
+      height: 40px;
+      background: #81c784;
+    }
+    .tree.satisfy {
+      filter: drop-shadow(0 0 16px #ffd700) brightness(1.3);
+      transition: filter 0.2s;
+    }
+
+    #startScreen, #endScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1ca9c9 0%, #457b9d 100%);
+      box-shadow: 0 0 80px 10px #000a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 24px;
+      animation: popin 0.7s cubic-bezier(.4,2,.6,1);
+    }
+
+    @keyframes popin {
+      0% { transform: scale(0.8) translateY(40px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    #startScreen h1, #endScreen h1 {
+      font-size: 2.5em;
+      margin-bottom: 0.2em;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 12px #0008;
+    }
+
+    #startScreen .desc, #endScreen .desc {
+      font-size: 1.1em;
+      margin-bottom: 1em;
+      color: #ffe;
+      text-shadow: 0 1px 8px #0006;
+    }
+
+    .difficulty-select {
+      display: flex;
+      gap: 16px;
+      margin: 18px 0 0 0;
+      justify-content: center;
+    }
+
+    .difficulty-btn {
+      padding: 8px 18px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      border: 2px solid #fff;
+      background: #fff3;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      outline: none;
+    }
+
+    .difficulty-btn.selected, .difficulty-btn:hover {
+      background: #ffd700;
+      color: #333;
+      border: 2px solid #ffd700;
+    }
+
+    #endScreen .score-summary {
+      margin: 1em 0 0.5em 0;
+      font-size: 1.3em;
+      color: #ffd700;
+      text-shadow: 0 2px 8px #0006;
+    }
+
+    #endScreen .final-difficulty {
+      font-size: 1em;
+      color: #fff;
+      margin-bottom: 0.5em;
+      opacity: 0.8;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 18px 48px;
+      background: linear-gradient(90deg, #ffd700 60%, #fffbe0 100%);
+      border: none;
+      font-size: 2em;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px #0004, 0 1.5px 0 #fff8 inset;
+      color: #b8860b;
+      letter-spacing: 1px;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.2s, color 0.2s;
+      outline: none;
+      text-shadow: 0 2px 8px #fff8, 0 1px 0 #fff;
+    }
+    button:hover, button:focus {
+      background: linear-gradient(90deg, #fffbe0 0%, #ffd700 100%);
+      color: #a0522d;
+      transform: scale(1.07);
+      box-shadow: 0 8px 32px #ffd70088, 0 2px 0 #fff8 inset;
+    }
+
+    /* Remove Water bucket UI styles */
+    /* #bucketBar, #bucketSVG, #bucketFill, #bucketText { ... } */
+
+    #leaderboard {
+      background: #fff2;
+      border-radius: 10px;
+      padding: 12px 18px;
+      min-width: 220px;
+      position: absolute;
+      top: 60px;
+      right: 40px;
+      z-index: 10;
+      margin-bottom: 0;
+      /* Responsive for small screens */
+      max-width: 320px;
+    }
+    @media (max-width: 700px) {
+      #leaderboard {
+        position: static;
+        margin: 0 auto 1em auto;
+        right: unset;
+        top: unset;
+        max-width: 95vw;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Water Quest</h1>
-    <p class="game-instructions">Collect 20 items to complete the game!</p>
-    <div class="stats">
-      <p>Cans Collected: <span id="current-cans">0</span></p>
-      <p>Time Left: <span id="timer">30</span>s</p>
-    </div>
-    <div id="achievements" class="achievement"></div>
-    <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
+  <header id="header">
+    <div>Score: <span id="score">0</span></div>
+    <div>Time: <span id="timer">0</span>s</div>
+    <div>Hearts: <span id="hearts">❤️❤️❤️❤️❤️</span></div>
+    <div id="powerupBar" style="margin-left:20px; font-size:1.2em;"></div>
+  </header>
+
+  <div id="gameArea">
+    <div id="mountainBg"></div>
+    <div id="ground"></div>
+    <!-- All scenery is now random and added by addScenery() -->
   </div>
-  <script src="script.js"></script>
+
+  <div id="startScreen">
+    <h1>💦 Charity Splash! 💦</h1>
+    <div class="desc">Catch the clean water, avoid the polluted drops!<br>
+      <span style="font-size:0.8em;opacity:0.8;">How long can you keep the village safe?</span>
+    </div>
+    <div style="margin-bottom:1em;">
+      <label for="usernameInput" style="font-size:1.1em;">Username:</label>
+      <input id="usernameInput" maxlength="16" style="font-size:1.1em; padding:4px 10px; border-radius:6px; border:1px solid #ccc; margin-left:8px;" placeholder="Enter name" />
+    </div>
+    <!-- Move leaderboard outside the main column for desktop, keep inside for mobile -->
+    <div id="leaderboard">
+      <div style="font-weight:bold; color:#ffd700; margin-bottom:6px;">🏆 Leaderboard</div>
+      <ol id="leaderboardList" style="margin:0; padding-left:1.2em; color:#fff; font-size:1.1em;"></ol>
+    </div>
+    <div style="margin-top:1.5em;">
+      <span style="font-size:1.1em;">Select Difficulty:</span>
+      <div class="difficulty-select">
+        <button class="difficulty-btn selected" data-diff="easy">Easy</button>
+        <button class="difficulty-btn" data-diff="normal">Normal</button>
+        <button class="difficulty-btn" data-diff="hard">Hard</button>
+      </div>
+    </div>
+    <button id="startButton">Play</button>
+  </div>
+
+  <div id="endScreen" style="display:none;">
+    <h1>Game Over!</h1>
+    <div class="final-difficulty"></div>
+    <div class="score-summary" id="finalMessage"></div>
+    <div class="desc">Try again and beat your score!</div>
+    <div>
+      <span style="font-size:1.1em;">Select Difficulty:</span>
+      <div class="difficulty-select" id="endDifficultySelect">
+        <button class="difficulty-btn" data-diff="easy">Easy</button>
+        <button class="difficulty-btn" data-diff="normal">Normal</button>
+        <button class="difficulty-btn" data-diff="hard">Hard</button>
+      </div>
+    </div>
+    <button id="playAgain">Play Again</button>
+    <button id="backToMenu" style="margin-left:20px; background:#eee; color:#333; font-size:1.1em; padding:10px 28px; border-radius:10px; border:1px solid #bbb; box-shadow:0 2px 8px #0002;">Back to Menu</button>
+  </div>
+
+  <!-- Sound effects -->
+  <audio id="waterSound" src="https://cdn.jsdelivr.net/gh/terkelg/awesome-creative-coding-assets/audio/water-bubble-pop.mp3"></audio>
+  <audio id="skullSound" src="https://cdn.jsdelivr.net/gh/terkelg/awesome-creative-coding-assets/audio/error-buzz.mp3"></audio>
+
+  <script>
+    const gameArea = document.getElementById("gameArea");
+    const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
+    const heartsDisplay = document.getElementById("hearts");
+    const endScreen = document.getElementById("endScreen");
+    const finalMessage = document.getElementById("finalMessage");
+    const playAgainButton = document.getElementById("playAgain");
+    const startScreen = document.getElementById("startScreen");
+    const startButton = document.getElementById("startButton");
+    const header = document.getElementById("header");
+    const waterSound = document.getElementById("waterSound");
+    const skullSound = document.getElementById("skullSound");
+    const leaderboardList = document.getElementById("leaderboardList");
+    const usernameInput = document.getElementById("usernameInput");
+    const backToMenuButton = document.getElementById("backToMenu");
+
+    let score = 0;
+    let timeElapsed = 0;
+    let hearts = 5;
+    let gameInterval;
+    let dropInterval;
+    let currentDropRate = 1500;
+    let difficulty = "easy";
+    let dropCleanChance = 0.8;
+    let dropSpeedBase = 1.5;
+    let maxHearts = 5;
+
+    let powerupState = {
+      slow: false,
+      double: false,
+      shield: false,
+      slowTimeout: null,
+      doubleTimeout: null,
+      shieldTimeout: null,
+    };
+
+    // Difficulty settings
+    const DIFFICULTY_SETTINGS = {
+      easy:    { dropRate: 1700, cleanChance: 0.9, speed: 1.2, hearts: 7, label: "Easy" },
+      normal:  { dropRate: 1300, cleanChance: 0.8, speed: 1.7, hearts: 5, label: "Normal" },
+      hard:    { dropRate: 900,  cleanChance: 0.65, speed: 2.2, hearts: 3, label: "Hard" }
+    };
+
+    // Difficulty button logic
+    function setupDifficultyButtons(container, initial) {
+      const btns = container.querySelectorAll(".difficulty-btn");
+      btns.forEach(btn => {
+        btn.classList.remove("selected");
+        if (btn.dataset.diff === initial) btn.classList.add("selected");
+        btn.onclick = () => {
+          btns.forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          difficulty = btn.dataset.diff;
+        };
+      });
+    }
+
+    // Setup start screen difficulty
+    setupDifficultyButtons(document.querySelector("#startScreen .difficulty-select"), "easy");
+    // Setup end screen difficulty (sync with start)
+    setupDifficultyButtons(document.getElementById("endDifficultySelect"), "easy");
+
+    function getSelectedDifficulty() {
+      // Prefer end screen if visible, else start screen
+      let sel = document.querySelector("#startScreen .difficulty-btn.selected");
+      if (endScreen.style.display === "flex") {
+        sel = document.querySelector("#endDifficultySelect .difficulty-btn.selected");
+      }
+      return sel ? sel.dataset.diff : "easy";
+    }
+
+    // Helper to create trees, rocks, and a house across the width
+    function addScenery() {
+      // Clear previous scenery
+      gameArea.innerHTML = "";
+
+      // Add mountains first
+      const mountainDiv = document.createElement("div");
+      mountainDiv.id = "mountainBg";
+      gameArea.appendChild(mountainDiv);
+      addMountains();
+
+      // --- Biome randomization ---
+      const biomes = [
+        {
+          name: "forest",
+          ground: "#228B22",
+          treeTypes: ["tree", "tree2"],
+          bush: "#3cb371",
+          grass: "#43a047"
+        },
+        {
+          name: "birch",
+          ground: "#b7e091",
+          treeTypes: ["tree3"],
+          bush: "#a8e063",
+          grass: "#b7e091"
+        },
+        {
+          name: "autumn",
+          ground: "#e6b07a",
+          treeTypes: ["tree", "tree2", "tree3"],
+          bush: "#e67e22",
+          grass: "#e6b07a"
+        },
+        {
+          name: "tundra",
+          ground: "#e0eafc",
+          treeTypes: ["tree3"],
+          bush: "#b2bec3",
+          grass: "#e0eafc"
+        },
+        {
+          name: "savanna",
+          ground: "#e4d96f",
+          treeTypes: ["tree", "tree3"],
+          bush: "#e9c46a",
+          grass: "#e4d96f"
+        }
+      ];
+      const biome = biomes[Math.floor(Math.random() * biomes.length)];
+
+      // Set ground color ONLY, do not set background on gameArea or body
+      const ground = document.createElement("div");
+      ground.id = "ground";
+      // Always use the same green for ground, do not use biome.ground
+      ground.style.background = "#228B22";
+      gameArea.appendChild(ground);
+
+      // Calculate how many trees and rocks fit
+      const width = window.innerWidth;
+      const treeSpacing = 120;
+      const rockSpacing = 180;
+
+      // Add trees with more randomization
+      const allTreeTypes = ["tree", "tree2", "tree3", "tree4", "tree5"];
+      for (let x = 20; x < width; x += treeSpacing) {
+        // Randomly pick from biome or all types for more variety
+        const treeType = Math.random() < 0.5 && biome.treeTypes ? biome.treeTypes[Math.floor(Math.random() * biome.treeTypes.length)] : allTreeTypes[Math.floor(Math.random() * allTreeTypes.length)];
+        const tree = document.createElement("div");
+        tree.className = treeType;
+        // Randomize width/height a bit more
+        let treeWidth, treeHeight;
+        switch (treeType) {
+          case "tree":
+            treeWidth = 16 + Math.random() * 14;
+            treeHeight = 50 + Math.random() * 30;
+            break;
+          case "tree2":
+            treeWidth = 14 + Math.random() * 12;
+            treeHeight = 38 + Math.random() * 24;
+            break;
+          case "tree3":
+            treeWidth = 12 + Math.random() * 14;
+            treeHeight = 28 + Math.random() * 24;
+            break;
+          case "tree4":
+            treeWidth = 18 + Math.random() * 12;
+            treeHeight = 44 + Math.random() * 20;
+            break;
+          case "tree5":
+            treeWidth = 12 + Math.random() * 14;
+            treeHeight = 34 + Math.random() * 18;
+            break;
+        }
+        tree.style.width = `${treeWidth}px`;
+        tree.style.height = `${treeHeight}px`;
+        tree.style.left = `${Math.max(1, x + Math.random() * 30)}px`;
+        // Randomize trunk color
+        const trunks = ["#8B4513", "#5c4033", "#a0522d", "#4e342e", "#7b5e57"];
+        tree.style.background = trunks[Math.floor(Math.random() * trunks.length)];
+        // Randomize treetop color for autumn
+        if (biome.name === "autumn") {
+          const autumnColors = ["#e67e22", "#f39c12", "#d35400", "#e17055", "#fdcb6e"];
+          tree.style.setProperty("--autumn-leaf", autumnColors[Math.floor(Math.random() * autumnColors.length)]);
+        }
+        // Custom treetop color for birch biome
+        if (biome.name === "birch" && treeType === "tree3") {
+          tree.style.background = "#a0522d";
+        }
+        gameArea.appendChild(tree);
+      }
+
+      // Add rocks with random sizes
+      for (let x = 60; x < width; x += rockSpacing) {
+        const rock = document.createElement("div");
+        rock.className = "rock";
+        const rockWidth = 24 + Math.random() * 12;
+        const rockHeight = 14 + Math.random() * 8;
+        rock.style.width = `${rockWidth}px`;
+        rock.style.height = `${rockHeight}px`;
+        rock.style.left = `${Math.max(1, x + Math.random() * 40)}px`;
+        rock.style.borderRadius = `${rockWidth/2}px ${rockWidth/2}px ${rockHeight/2}px ${rockHeight/2}px`;
+        gameArea.appendChild(rock);
+      }
+
+      // Add bushes
+      for (let x = 40; x < width; x += 110) {
+        if (Math.random() < 0.7) {
+          const bush = document.createElement("div");
+          bush.className = "bush";
+          bush.style.left = `${Math.max(1, x + Math.random() * 40)}px`;
+          bush.style.width = `${24 + Math.random() * 16}px`;
+          bush.style.height = `${12 + Math.random() * 10}px`;
+          bush.style.background = biome.bush;
+          // Add flowers sometimes
+          if (Math.random() < 0.3) {
+            const flower = document.createElement("div");
+            flower.className = "bush-flower";
+            bush.appendChild(flower);
+          }
+          gameArea.appendChild(bush);
+        }
+      }
+
+      // Add grass clumps
+      for (let x = 10; x < width; x += 40) {
+        if (Math.random() < 0.6) {
+          const grass = document.createElement("div");
+          grass.className = "grass";
+          grass.style.left = `${Math.max(1, x + Math.random() * 20)}px`;
+          // Add blades
+          for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
+            const blade = document.createElement("div");
+            blade.className = "grass-blade";
+            blade.style.left = `${4 + i * 4 + Math.random() * 2}px`;
+            blade.style.height = `${8 + Math.random() * 8}px`;
+            blade.style.background = biome.grass;
+            grass.appendChild(blade);
+          }
+          gameArea.appendChild(grass);
+        }
+      }
+
+      // Add 1-5 houses with more randomization
+      const numHouses = 1 + Math.floor(Math.random() * 5); // 1 to 5 houses
+      const housePositions = [];
+      for (let i = 0; i < numHouses; i++) {
+        // Random house width and height
+        const houseWidth = 50 + Math.random() * 40; // 50-90px
+        const houseHeight = 40 + Math.random() * 30; // 40-70px
+
+        // Avoid overlapping houses by spacing them out
+        let houseLeft;
+        let tries = 0;
+        do {
+          houseLeft = Math.random() * (width - houseWidth);
+          tries++;
+        } while (
+          housePositions.some(pos => Math.abs(pos - houseLeft) < houseWidth + 40) && tries < 10
+        );
+        housePositions.push(houseLeft);
+
+        // Random building and roof colors
+        const buildingColors = ["#ffe4b5", "#f4a460", "#d2b48c", "#deb887", "#fff8dc", "#e6e6fa", "#c0c0c0"];
+        const roofColors = ["#b22222", "#8b0000", "#a0522d", "#2f4f4f", "#556b2f", "#4682b4", "#8b008b"];
+        const buildingColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
+        const roofColor = roofColors[Math.floor(Math.random() * roofColors.length)];
+
+        // House element
+        const house = document.createElement("div");
+        house.className = "house";
+        house.style.left = `${houseLeft}px`;
+        house.style.bottom = "80px"; /* Match the new ground height */
+        house.style.position = "absolute";
+        house.style.width = `${houseWidth}px`;
+        house.style.height = `${houseHeight}px`;
+        house.style.background = buildingColor;
+        house.style.border = "2px solid #444";
+        house.style.zIndex = "2";
+        house.style.borderRadius = `${4 + Math.random() * 8}px`;
+
+        // Roof (fits house base)
+        const roof = document.createElement("div");
+        roof.style.position = "absolute";
+        roof.style.left = "0px";
+        // Roof sits flush on top of house
+        const roofHeight = 20 + Math.random() * 20; // 20-40px
+        roof.style.top = `-${roofHeight}px`;
+        roof.style.width = `${houseWidth}px`;
+        roof.style.height = `${roofHeight}px`;
+        roof.style.background = roofColor;
+        roof.style.clipPath = "polygon(50% 0%, 0% 100%, 100% 100%)";
+        roof.style.borderRadius = `${2 + Math.random() * 6}px`;
+        house.appendChild(roof);
+
+        // Door
+        const door = document.createElement("div");
+        door.style.position = "absolute";
+        door.style.left = `${houseWidth / 2 - 7 + Math.random() * 6}px`;
+        door.style.bottom = "0";
+        door.style.width = `${8 + Math.random() * 8}px`;
+        door.style.height = `${16 + Math.random() * 10}px`;
+        door.style.background = "#654321";
+        door.style.borderRadius = "2px";
+        house.appendChild(door);
+
+        // Optionally add a window (always inside house)
+        if (Math.random() < 0.7) {
+          const windowDiv = document.createElement("div");
+          windowDiv.style.position = "absolute";
+          // Window size
+          const winW = 14, winH = 14;
+          // Padding from edges
+          const padX = 6, padY = 6;
+          // Place window within house bounds, upper half
+          windowDiv.style.left = `${padX + Math.random() * (houseWidth - winW - 2 * padX)}px`;
+          windowDiv.style.top = `${padY + Math.random() * (houseHeight/2 - winH - padY)}px`;
+          windowDiv.style.width = `${winW}px`;
+          windowDiv.style.height = `${winH}px`;
+          windowDiv.style.background = "#e0ffff";
+          windowDiv.style.border = "2px solid #aaa";
+          windowDiv.style.borderRadius = "3px";
+          house.appendChild(windowDiv);
+        }
+
+        gameArea.appendChild(house);
+      }
+    }
+
+    function addMountains() {
+      const mountainBg = document.getElementById("mountainBg");
+      mountainBg.innerHTML = "";
+      const width = window.innerWidth;
+      const height = gameArea.offsetHeight || window.innerHeight - 60;
+      const numRanges = 2 + Math.floor(Math.random() * 2); // 2-3 layers
+      for (let r = 0; r < numRanges; r++) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", height);
+        svg.style.position = "absolute";
+        svg.style.left = "0";
+        svg.style.top = "0";
+        svg.style.zIndex = r; // further back for lower r
+        svg.style.pointerEvents = "none";
+        // Color and opacity for each range
+        const colors = [
+          "rgba(120,140,160,0.23)",
+          "rgba(100,120,140,0.32)",
+          "rgba(80,100,120,0.45)"
+        ];
+        const color = colors[r % colors.length];
+        // Generate random mountain points
+        let points = "";
+        let x = 0;
+        const baseY = height - 80 - 40 * (numRanges - r); // higher for further ranges
+        while (x < width) {
+          const peakHeight = 40 + Math.random() * (60 + r * 20);
+          const peakWidth = 60 + Math.random() * 120;
+          points += `${x},${baseY - peakHeight} `;
+          x += peakWidth / 2 + Math.random() * 40;
+          points += `${x},${baseY} `;
+          x += peakWidth / 2 + Math.random() * 40;
+        }
+        // Complete polygon
+        points = `0,${height} ` + points + `${width},${height}`;
+        const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        poly.setAttribute("points", points);
+        poly.setAttribute("fill", color);
+        svg.appendChild(poly);
+        mountainBg.appendChild(svg);
+      }
+    }
+
+    // Helper to create a splash effect for water
+    function showWaterSplash(x, y) {
+      const splash = document.createElement("div");
+      splash.style.position = "absolute";
+      splash.style.left = `${x - 20}px`;
+      splash.style.top = `${y - 20}px`;
+      splash.style.width = "40px";
+      splash.style.height = "40px";
+      splash.style.borderRadius = "50%";
+      splash.style.background = "rgba(30, 169, 201, 0.5)";
+      splash.style.boxShadow = "0 0 24px 8px #1ca9c9";
+      splash.style.pointerEvents = "none";
+      splash.style.zIndex = 1000;
+      splash.style.transform = "scale(1)";
+      splash.style.transition = "transform 0.4s cubic-bezier(.4,2,.6,1), opacity 0.4s";
+      gameArea.appendChild(splash);
+      setTimeout(() => {
+        splash.style.transform = "scale(2.2)";
+        splash.style.opacity = "0";
+      }, 10);
+      setTimeout(() => splash.remove(), 420);
+    }
+
+    // Helper to create a poof effect for skull
+    function showSkullPoof(x, y) {
+      const poof = document.createElement("div");
+      poof.style.position = "absolute";
+      poof.style.left = `${x - 20}px`;
+      poof.style.top = `${y - 20}px`;
+      poof.style.width = "40px";
+      poof.style.height = "40px";
+      poof.style.borderRadius = "50%";
+      poof.style.background = "rgba(220, 20, 60, 0.5)";
+      poof.style.boxShadow = "0 0 24px 8px #ff2222";
+      poof.style.pointerEvents = "none";
+      poof.style.zIndex = 1000;
+      poof.style.transform = "scale(1)";
+      poof.style.transition = "transform 0.4s cubic-bezier(.4,2,.6,1), opacity 0.4s";
+      gameArea.appendChild(poof);
+      setTimeout(() => {
+        poof.style.transform = "scale(2.2)";
+        poof.style.opacity = "0";
+      }, 10);
+      setTimeout(() => poof.remove(), 420);
+    }
+
+    function showPopup(text, x, y, color = "#fff", shadow = "#000") {
+      const popup = document.createElement("div");
+      popup.textContent = text;
+      popup.style.position = "fixed";
+      popup.style.left = `${x - 20}px`;
+      popup.style.top = `${y - 20}px`;
+      popup.style.fontSize = "1.5em";
+      popup.style.fontWeight = "bold";
+      popup.style.color = color;
+      popup.style.textShadow = `0 2px 8px ${shadow}, 0 1px 0 #fff8`;
+      popup.style.pointerEvents = "none";
+      popup.style.zIndex = 2000;
+      popup.style.transition = "transform 0.7s cubic-bezier(.4,2,.6,1), opacity 0.7s";
+      popup.style.transform = "translateY(0)";
+      popup.style.opacity = "1";
+      document.body.appendChild(popup);
+      setTimeout(() => {
+        popup.style.transform = "translateY(-40px) scale(1.2)";
+        popup.style.opacity = "0";
+      }, 10);
+      setTimeout(() => popup.remove(), 700);
+    }
+
+    function updatePowerupBar() {
+      const bar = document.getElementById("powerupBar");
+      let html = "";
+      if (powerupState.slow) html += '<span style="color:#00e6e6;">🐢 Slow</span> ';
+      if (powerupState.double) html += '<span style="color:#ffd700;">✖️2 Double</span> ';
+      if (powerupState.shield) html += '<span style="color:#8bc34a;">🛡️ Shield</span> ';
+      bar.innerHTML = html;
+    }
+
+    // --- Powerup drop logic ---
+    function maybePowerupDrop() {
+      // 2% chance for a powerup drop
+      if (Math.random() < 0.02) {
+        const types = [
+          { key: "slow", icon: "🐢", color: "#00e6e6", label: "Slow" },
+          { key: "double", icon: "✖️2", color: "#ffd700", label: "Double" },
+          { key: "shield", icon: "🛡️", color: "#8bc34a", label: "Shield" }
+        ];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const power = document.createElement("div");
+        power.classList.add("drop");
+        power.style.background = type.color;
+        power.style.boxShadow = `0 0 24px 8px ${type.color}80`;
+        power.textContent = type.icon;
+        const size = 38 + Math.random() * 10;
+        power.style.width = `${size}px`;
+        power.style.height = `${size}px`;
+        power.style.fontSize = `${size * 0.6}px`;
+        power.style.left = Math.random() * (window.innerWidth - size) + "px";
+        power.style.top = `-${size}px`;
+        gameArea.appendChild(power);
+
+        let posY = -size;
+        // If slow is active, slow all drops
+        const fallSpeed = (powerupState.slow ? dropSpeedBase * 0.4 : dropSpeedBase) + Math.random();
+        const fall = setInterval(() => {
+          posY += fallSpeed;
+          power.style.top = posY + "px";
+          if (posY > window.innerHeight) {
+            clearInterval(fall);
+            power.remove();
+          }
+        }, 20);
+
+        power.addEventListener("click", (e) => {
+          const rect = power.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          showPopup(type.label + "!", x, y, type.color, "#fff");
+          waterSound.currentTime = 0;
+          waterSound.play();
+          showWaterSplash(x, y);
+
+          // Activate effect
+          if (type.key === "slow") {
+            powerupState.slow = true;
+            updatePowerupBar();
+            if (powerupState.slowTimeout) clearTimeout(powerupState.slowTimeout);
+            powerupState.slowTimeout = setTimeout(() => {
+              powerupState.slow = false;
+              updatePowerupBar();
+            }, 7000);
+          } else if (type.key === "double") {
+            powerupState.double = true;
+            updatePowerupBar();
+            if (powerupState.doubleTimeout) clearTimeout(powerupState.doubleTimeout);
+            powerupState.doubleTimeout = setTimeout(() => {
+              powerupState.double = false;
+              updatePowerupBar();
+            }, 7000);
+          } else if (type.key === "shield") {
+            powerupState.shield = true;
+            updatePowerupBar();
+            if (powerupState.shieldTimeout) clearTimeout(powerupState.shieldTimeout);
+            powerupState.shieldTimeout = setTimeout(() => {
+              powerupState.shield = false;
+              updatePowerupBar();
+            }, 7000);
+          }
+          clearInterval(fall);
+          power.remove();
+        });
+        return true;
+      }
+      return false;
+    }
+
+    // --- Modified createDrop to include powerups and effects ---
+    function createDrop() {
+      if (maybePowerupDrop()) return;
+
+      // 0.1% chance for a heart
+      if (Math.random() < 0.001) {
+        const heart = document.createElement("div");
+        heart.classList.add("drop");
+        heart.style.background = "#ff5e6c";
+        heart.style.boxShadow = "0 0 24px 8px #ffb6c1";
+        heart.textContent = "❤️";
+        const size = 38 + Math.random() * 18;
+        heart.style.width = `${size}px`;
+        heart.style.height = `${size}px`;
+        heart.style.fontSize = `${size * 0.6}px`;
+        heart.style.left = Math.random() * (window.innerWidth - size) + "px";
+        heart.style.top = `-${size}px`;
+        gameArea.appendChild(heart);
+
+        let posY = -size;
+        const fallSpeed = dropSpeedBase + Math.random();
+        const fall = setInterval(() => {
+          posY += fallSpeed;
+          heart.style.top = posY + "px";
+          if (posY > window.innerHeight) {
+            clearInterval(fall);
+            heart.remove();
+          }
+        }, 20);
+
+        heart.addEventListener("click", (e) => {
+          const rect = heart.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          if (hearts < maxHearts) {
+            hearts++;
+            heartsDisplay.textContent = "❤️".repeat(hearts);
+            showPopup("+1 heart", x, y, "#ff5e6c", "#fff");
+          } else {
+            showPopup("Full!", x, y, "#ff5e6c", "#fff");
+          }
+          waterSound.currentTime = 0;
+          waterSound.play();
+          showWaterSplash(x, y);
+          clearInterval(fall);
+          heart.remove();
+        });
+        return;
+      }
+
+      // 1% chance for a star
+      if (Math.random() < 0.01) {
+        const star = document.createElement("div");
+        star.classList.add("drop");
+        star.style.background = "gold";
+        star.style.boxShadow = "0 0 24px 8px #ffd700";
+        star.textContent = "⭐";
+        // Randomize size
+        const size = 38 + Math.random() * 18; // 38-56px
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.fontSize = `${size * 0.6}px`;
+        star.style.left = Math.random() * (window.innerWidth - size) + "px";
+        star.style.top = `-${size}px`;
+        gameArea.appendChild(star);
+
+        let posY = -size;
+        const fallSpeed = dropSpeedBase + Math.random();
+        const fall = setInterval(() => {
+          posY += fallSpeed;
+          star.style.top = posY + "px";
+          if (posY > window.innerHeight) {
+            clearInterval(fall);
+            star.remove();
+          }
+        }, 20);
+
+        star.addEventListener("click", (e) => {
+          const rect = star.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          score += 1000;
+          scoreDisplay.textContent = score;
+          showPopup("+1000", x, y, "#ffd700", "#fff");
+          waterSound.currentTime = 0;
+          waterSound.play();
+          showWaterSplash(x, y);
+          clearInterval(fall);
+          star.remove();
+        });
+        return;
+      }
+
+      // Normal drop
+      const drop = document.createElement("div");
+      const isClean = Math.random() < dropCleanChance;
+      drop.classList.add("drop", isClean ? "clean" : "polluted");
+      drop.textContent = isClean ? "💧" : "☠️";
+      // Randomize size
+      const size = 32 + Math.random() * 20; // 32-52px
+      drop.style.width = `${size}px`;
+      drop.style.height = `${size}px`;
+      drop.style.fontSize = `${size * 0.6}px`;
+      drop.style.left = Math.random() * (window.innerWidth - size) + "px";
+      drop.style.top = `-${size}px`;
+      // For polluted, randomize color a bit
+      if (!isClean) {
+        const grays = ["#222", "#333", "#444", "#555", "#222", "#444"];
+        drop.style.background = grays[Math.floor(Math.random() * grays.length)];
+      }
+      gameArea.appendChild(drop);
+
+      let posY = -size;
+      const fallSpeed = (powerupState.slow ? dropSpeedBase * 0.4 : dropSpeedBase) + Math.random();
+      const fall = setInterval(() => {
+        posY += fallSpeed;
+        drop.style.top = posY + "px";
+        if (posY > window.innerHeight) {
+          clearInterval(fall);
+          drop.remove();
+          if (drop.classList.contains("clean")) loseHeart();
+        }
+      }, 20);
+
+      drop.addEventListener("click", (e) => {
+        const rect = drop.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+
+        if (drop.classList.contains("clean")) {
+          let points = 10;
+          if (powerupState.double) points *= 2;
+          score += points;
+          showPopup("+" + points, x, y, "#1ca9c9", "#fff");
+          scoreDisplay.textContent = score;
+          // Animate score
+          scoreDisplay.classList.add("satisfy");
+          setTimeout(() => scoreDisplay.classList.remove("satisfy"), 400);
+          // Animate random tree
+          const trees = Array.from(document.querySelectorAll('.tree, .tree2, .tree3, .tree4, .tree5'));
+          if (trees.length) {
+            const t = trees[Math.floor(Math.random() * trees.length)];
+            t.classList.add("satisfy");
+            setTimeout(() => t.classList.remove("satisfy"), 350);
+          }
+          waterSound.currentTime = 0;
+          waterSound.play();
+          showWaterSplash(x, y);
+        } else {
+          if (powerupState.shield) {
+            powerupState.shield = false;
+            updatePowerupBar();
+            showPopup("Shield!", x, y, "#8bc34a", "#fff");
+          } else {
+            loseHeart();
+            showPopup("-1 heart", x, y, "#ff2222", "#fff");
+          }
+          skullSound.currentTime = 0;
+          skullSound.play();
+          showSkullPoof(x, y);
+        }
+        clearInterval(fall);
+        drop.remove();
+      });
+    }
+
+    function loseHeart() {
+      if (typeof window._canLoseHearts === "function" && !window._canLoseHearts()) {
+        return; // Ignore heart loss during grace period
+      }
+      hearts--;
+      if (hearts < 0) hearts = 0;
+      heartsDisplay.textContent = "❤️".repeat(hearts);
+      if (hearts === 0) endGame();
+    }
+
+    function getLeaderboard() {
+      // Use localStorage for persistence
+      try {
+        return JSON.parse(localStorage.getItem("cs_leaderboard") || "[]");
+      } catch {
+        return [];
+      }
+    }
+    function setLeaderboard(lb) {
+      localStorage.setItem("cs_leaderboard", JSON.stringify(lb));
+    }
+    function renderLeaderboard() {
+      const lb = getLeaderboard();
+      leaderboardList.innerHTML = "";
+      lb.slice(0, 10).forEach((entry, i) => {
+        const diff = entry.diff ? `<span style="color:#ffd700;font-size:0.9em;">[${entry.diff}]</span>` : "";
+        const li = document.createElement("li");
+        li.innerHTML = `${entry.name || "Anonymous"} — ${entry.score} ${diff}`;
+        leaderboardList.appendChild(li);
+      });
+      if (lb.length === 0) {
+        leaderboardList.innerHTML = "<li style='color:#ccc;'>No scores yet</li>";
+      }
+    }
+    function saveScoreToLeaderboard(name, score, diffLabel) {
+      if (!name) {
+        name = "PLAYER" + Math.floor(100 + Math.random() * 900);
+      }
+      let lb = getLeaderboard();
+      // Remove any previous entry with the same name if lower score
+      let found = lb.find(entry => entry.name === name);
+      if (found) {
+        if (score > found.score) {
+          // Replace with higher score
+          lb = lb.filter(entry => entry.name !== name);
+          lb.push({ name, score, diff: diffLabel });
+        }
+        // else do nothing (keep higher score)
+      } else {
+        lb.push({ name, score, diff: diffLabel });
+      }
+      lb = lb.sort((a, b) => b.score - a.score).slice(0, 10);
+      setLeaderboard(lb);
+    }
+
+    function startGame() {
+      // Set difficulty
+      difficulty = getSelectedDifficulty();
+      const settings = DIFFICULTY_SETTINGS[difficulty];
+      currentDropRate = settings.dropRate;
+      dropCleanChance = settings.cleanChance;
+      dropSpeedBase = settings.speed;
+      maxHearts = settings.hearts;
+
+      // Reset state
+      score = 0;
+      timeElapsed = 0;
+      hearts = maxHearts;
+      scoreDisplay.textContent = score;
+      timerDisplay.textContent = timeElapsed;
+      heartsDisplay.textContent = "❤️".repeat(maxHearts);
+      powerupState = { slow: false, double: false, shield: false, slowTimeout: null, doubleTimeout: null, shieldTimeout: null };
+      updatePowerupBar();
+
+      // Clear and add scenery
+      addScenery();
+
+      endScreen.style.display = "none";
+      startScreen.style.display = "none";
+      header.style.display = "flex";
+      gameArea.style.display = "block";
+
+      let lastTick = Date.now();
+
+      // Prevent clicks until drops are visible
+      gameArea.style.pointerEvents = "none";
+
+      // --- Prevent heart loss for first 3 seconds ---
+      let canLoseHearts = false;
+      setTimeout(() => {
+        canLoseHearts = true;
+        gameArea.style.pointerEvents = "auto";
+      }, 3000);
+
+      // Delay drop spawning so player is ready
+      setTimeout(() => {
+        dropInterval = setInterval(createDrop, currentDropRate);
+        createDrop();
+      }, 1200);
+
+      gameInterval = setInterval(() => {
+        // Prevent tab-out cheating: use real elapsed time
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastTick) / 1000);
+        if (elapsed > 0) {
+          timeElapsed += elapsed;
+          timerDisplay.textContent = timeElapsed;
+          lastTick = now;
+          if (timeElapsed % 15 === 0 && currentDropRate > 400) {
+            clearInterval(dropInterval);
+            currentDropRate -= 100;
+            dropInterval = setInterval(createDrop, currentDropRate);
+          }
+        }
+      }, 1000);
+
+      // Listen for tab visibility changes and update lastTick
+      document.onvisibilitychange = () => {
+        if (!document.hidden) {
+          lastTick = Date.now();
+        }
+      };
+
+      // Save username for this session
+      let uname = usernameInput.value.trim().slice(0, 16);
+      if (!uname) {
+        uname = "PLAYER" + Math.floor(100 + Math.random() * 900); // 3 random digits
+      }
+      window._cs_username = uname;
+      window._cs_diffLabel = DIFFICULTY_SETTINGS[difficulty].label;
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(dropInterval);
+      // Show difficulty and summary
+      const settings = DIFFICULTY_SETTINGS[difficulty];
+      document.querySelector("#endScreen .final-difficulty").textContent =
+        `Difficulty: ${settings.label}`;
+      finalMessage.innerHTML = `Final Score: <b>${score}</b><br/>Time Survived: <b>${timeElapsed}s</b>`;
+      // Sync difficulty buttons
+      setupDifficultyButtons(document.getElementById("endDifficultySelect"), difficulty);
+
+      // Save to leaderboard (with difficulty label)
+      saveScoreToLeaderboard(window._cs_username, score, window._cs_diffLabel);
+      renderLeaderboard();
+
+      endScreen.style.display = "flex";
+      header.style.display = "none";
+      gameArea.style.display = "none";
+    }
+
+    startButton.onclick = startGame;
+    playAgainButton.onclick = startGame;
+
+    backToMenuButton.onclick = () => {
+      endScreen.style.display = "none";
+      startScreen.style.display = "flex";
+      header.style.display = "none";
+      gameArea.style.display = "none";
+      renderLeaderboard();
+      // Prevent endGame from being called again by clearing intervals and resetting hearts
+      clearInterval(gameInterval);
+      clearInterval(dropInterval);
+      // Reset hearts to avoid triggering endGame on stray drops
+      hearts = 1;
+    };
+
+    // Optional: re-layout scenery and mountains on window resize
+    window.addEventListener("resize", () => {
+      if (gameArea.style.display === "block") addScenery();
+    });
+
+    // Render leaderboard on menu show
+    renderLeaderboard();
+    // Optionally, update leaderboard if username changes
+    usernameInput.addEventListener("input", renderLeaderboard);
+  </script>
 </body>
 </html>
