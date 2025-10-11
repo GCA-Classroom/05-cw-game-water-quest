@@ -1,54 +1,58 @@
-// Game configuration and state variables
-const GOAL_CANS = 25;        // Total items needed to collect
-let currentCans = 0;         // Current number of items collected
-let gameActive = false;      // Tracks if game is currently running
-let spawnInterval;          // Holds the interval for spawning items
+const gameArea = document.getElementById("gameArea");
+const scoreDisplay = document.getElementById("score");
+const timerDisplay = document.getElementById("timer");
 
-// Creates the 3x3 game grid where items will appear
-function createGrid() {
-  const grid = document.querySelector('.game-grid');
-  grid.innerHTML = ''; // Clear any existing grid cells
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'grid-cell'; // Each cell represents a grid square
-    grid.appendChild(cell);
-  }
+let score = 0;
+let timeLeft = 30;
+let gameInterval;
+let dropInterval;
+
+function createDrop() {
+  const drop = document.createElement("div");
+  const isClean = Math.random() < 0.7; // 70% chance clean
+  drop.classList.add("drop");
+  drop.classList.add(isClean ? "clean" : "polluted");
+  drop.textContent = isClean ? "💧" : "☠️";
+  drop.style.left = Math.random() * (window.innerWidth - 40) + "px";
+  drop.style.top = "-40px";
+  gameArea.appendChild(drop);
+
+  // Drop animation
+  let posY = -40;
+  const fallSpeed = 2 + Math.random() * 2;
+  const fall = setInterval(() => {
+    posY += fallSpeed;
+    drop.style.top = posY + "px";
+    if (posY > window.innerHeight) {
+      clearInterval(fall);
+      drop.remove();
+    }
+  }, 20);
+
+  drop.addEventListener("click", () => {
+    if (drop.classList.contains("clean")) {
+      score += 10;
+    } else {
+      score -= 5;
+      if (score < 0) score = 0;
+    }
+    scoreDisplay.textContent = score;
+    clearInterval(fall);
+    drop.remove();
+  });
 }
 
-// Ensure the grid is created when the page loads
-createGrid();
-
-// Spawns a new item in a random grid cell
-function spawnWaterCan() {
-  if (!gameActive) return; // Stop if the game is not active
-  const cells = document.querySelectorAll('.grid-cell');
-  
-  // Clear all cells before spawning a new water can
-  cells.forEach(cell => (cell.innerHTML = ''));
-
-  // Select a random cell from the grid to place the water can
-  const randomCell = cells[Math.floor(Math.random() * cells.length)];
-
-  // Use a template literal to create the wrapper and water-can element
-  randomCell.innerHTML = `
-    <div class="water-can-wrapper">
-      <div class="water-can"></div>
-    </div>
-  `;
-}
-
-// Initializes and starts a new game
 function startGame() {
-  if (gameActive) return; // Prevent starting a new game if one is already active
-  gameActive = true;
-  createGrid(); // Set up the game grid
-  spawnInterval = setInterval(spawnWaterCan, 1000); // Spawn water cans every second
+  dropInterval = setInterval(createDrop, 700);
+  gameInterval = setInterval(() => {
+    timeLeft--;
+    timerDisplay.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(gameInterval);
+      clearInterval(dropInterval);
+      alert("Game over! Final score: " + score);
+    }
+  }, 1000);
 }
 
-function endGame() {
-  gameActive = false; // Mark the game as inactive
-  clearInterval(spawnInterval); // Stop spawning water cans
-}
-
-// Set up click handler for the start button
-document.getElementById('start-game').addEventListener('click', startGame);
+window.onload = startGame;
