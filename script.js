@@ -234,7 +234,7 @@ function wireUX(){
     document.body.classList.add(cls);
   });
 
-  // Difficulty switch (changes spawn rate next round)
+  // Difficulty switch 
   els.difficultySelect.addEventListener("change", (e)=>{
     spawnMs = DIFFICULTY[e.target.value] || DIFFICULTY.normal;
     setMsg(`Difficulty set to ${e.target.value}.`);
