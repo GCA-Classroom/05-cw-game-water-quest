@@ -240,7 +240,7 @@ function wireUX(){
     setMsg(`Difficulty set to ${e.target.value}.`);
   });
 
-  // Reduced motion
+  // Reduced motions
   els.reducedMotion.addEventListener("change", e=>{
     document.documentElement.classList.toggle("rm", e.target.checked);
   });
