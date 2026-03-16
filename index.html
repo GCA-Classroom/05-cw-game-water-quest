@@ -8,7 +8,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>Water Quest</h1>
+    <div class="brand-header">
+      <img src="img/cw_logo_horizontal.png" alt="charity: water logo" class="brand-logo" />
+      <h1>Water Quest</h1>
+    </div>
     <p class="game-instructions">Collect 20 items to complete the game!</p>
     <div class="stats">
       <p>Cans Collected: <span id="current-cans">0</span></p>
@@ -16,7 +19,10 @@
     </div>
     <div id="achievements" class="achievement"></div>
     <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
+    <div class="game-controls">
+      <button id="start-game">Start Game</button>
+      <button id="reset-game" type="button">Reset Game</button>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>
