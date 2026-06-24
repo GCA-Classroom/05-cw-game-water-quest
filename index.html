@@ -9,14 +9,21 @@
 <body>
   <div class="container">
     <h1>Water Quest</h1>
-    <p class="game-instructions">Collect 20 items to complete the game!</p>
+    <p class="game-instructions">Collect 15 water jugs. Turn on obstacles for an extra challenge.</p>
     <div class="stats">
       <p>Cans Collected: <span id="current-cans">0</span></p>
       <p>Time Left: <span id="timer">30</span>s</p>
     </div>
+    <label class="challenge-toggle" for="obstacles-enabled">
+      <input type="checkbox" id="obstacles-enabled">
+      Enable obstacle mode
+    </label>
     <div id="achievements" class="achievement"></div>
     <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
+    <div class="controls">
+      <button id="start-game">Start Game</button>
+      <button id="reset-game" type="button">Reset</button>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>
